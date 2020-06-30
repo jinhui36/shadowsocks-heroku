@@ -50,7 +50,7 @@ wss = new WebSocketServer server: server
 
 wss.on "connection", (ws) ->
   console.log "server connected"
-  console.log "concurrent connections:", wss.clients.length
+  console.log "concurrent connections:", wss.clients.size
   encryptor = new Encryptor(KEY, METHOD)
   stage = 0
   headerLength = 0
@@ -120,7 +120,7 @@ wss.on "connection", (ws) ->
 
         if data.length > headerLength
           # make sure no data is lost
-          buf = new Buffer(data.length - headerLength)
+          buf = Buffer.allocUnsafe(data.length - headerLength)
           data.copy buf, 0, headerLength
           cachedPieces.push buf
           buf = null
@@ -136,19 +136,19 @@ wss.on "connection", (ws) ->
       # make sure no data is lost
 
   ws.on "ping", ->
-    ws.pong '', null, true
+    ws.pong '', true, null
 
   ws._socket.on "drain", ->
     remote.resume() if stage is 5
 
   ws.on "close", ->
     console.log "server disconnected"
-    console.log "concurrent connections:", wss.clients.length
+    console.log "concurrent connections:", wss.clients.size
     remote.destroy() if remote
 
   ws.on "error", (e) ->
     console.warn "server: #{e}"
-    console.log "concurrent connections:", wss.clients.length
+    console.log "concurrent connections:", wss.clients.size
     remote.destroy() if remote
 
 server.listen PORT, LOCAL_ADDRESS, ->
