@@ -95,7 +95,7 @@ server = net.createServer (connection) ->
         connection.pause() if ws.bufferedAmount > 0
       return
     if stage is 0
-      tempBuf = new Buffer(2)
+      tempBuf = Buffer.allocUnsafe(2)
       tempBuf.write "\u0005\u0000", 0
       connection.write tempBuf
       stage = 1
@@ -113,7 +113,7 @@ server = net.createServer (connection) ->
         addrtype = data[3]
         unless cmd is 1
           console.log "unsupported cmd:", cmd
-          reply = new Buffer("\u0005\u0007\u0000\u0001", "binary")
+          reply = Buffer.from("\u0005\u0007\u0000\u0001", "binary")
           connection.end reply
           return
         if addrtype is 3
@@ -134,7 +134,7 @@ server = net.createServer (connection) ->
           addrToSend += data.slice(4, 5 + addrLen + 2).toString("binary")
           remotePort = data.readUInt16BE(5 + addrLen)
           headerLength = 5 + addrLen + 2
-        buf = new Buffer(10)
+        buf = Buffer.allocUnsafe(10)
         buf.write "\u0005\u0000\u0000\u0001", 0, 4, "binary"
         buf.write "\u0000\u0000\u0000\u0000", 4, 4, "binary"
         buf.writeInt16BE remotePort, 8
@@ -175,7 +175,7 @@ server = net.createServer (connection) ->
               return
 
           console.log "connecting #{remoteAddr} via #{aServer}"
-          addrToSendBuf = new Buffer(addrToSend, "binary")
+          addrToSendBuf = Buffer.from(addrToSend, "binary")
           addrToSendBuf = encryptor.encrypt addrToSendBuf
           ws.send addrToSendBuf, { binary: true }
           i = 0
@@ -189,7 +189,7 @@ server = net.createServer (connection) ->
           stage = 5
 
           ping = setInterval(->
-            ws.ping "", null, true
+            ws.ping "", true, null
           , 50 * 1000)
 
           ws._socket.on "drain", ->
@@ -214,7 +214,7 @@ server = net.createServer (connection) ->
             return
 
         if data.length > headerLength
-          buf = new Buffer(data.length - headerLength)
+          buf = Buffer.allocUnsafe(data.length - headerLength)
           data.copy buf, 0, headerLength
           cachedPieces.push buf
           buf = null
